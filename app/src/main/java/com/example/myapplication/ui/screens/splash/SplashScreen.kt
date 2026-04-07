@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.screens.splash
 
+import android.media.MediaPlayer
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -13,31 +14,47 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.R
 import com.example.myapplication.ui.theme.BlueGradientEnd
 import com.example.myapplication.ui.theme.BlueGradientStart
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    isLoggedIn: Boolean,
+    isUserLoggedIn: Boolean,
+    isKnownDevice: Boolean,
     onNavigateToHome: () -> Unit,
+    onNavigateToPin: () -> Unit,
     onNavigateToSignIn: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    DisposableEffect(Unit) {
+        val mediaPlayer = MediaPlayer.create(context, R.raw.splash_sound)
+        mediaPlayer?.start()
+
+        onDispose {
+            mediaPlayer?.release()
+        }
+    }
+
     LaunchedEffect(Unit) {
         delay(2500)
-        if (isLoggedIn) {
-            onNavigateToHome()
-        } else {
-            onNavigateToSignIn()
+        when {
+            isUserLoggedIn -> onNavigateToHome()
+            isKnownDevice -> onNavigateToPin()
+            else -> onNavigateToSignIn()
         }
     }
 
@@ -56,9 +73,7 @@ fun SplashScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    listOf(BlueGradientStart, BlueGradientEnd)
-                )
+                Brush.verticalGradient(listOf(BlueGradientStart, BlueGradientEnd))
             ),
         contentAlignment = Alignment.Center
     ) {

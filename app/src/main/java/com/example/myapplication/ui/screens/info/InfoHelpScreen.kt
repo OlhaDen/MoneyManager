@@ -18,8 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.myapplication.ui.components.AudioPlaceholderCard
-import com.example.myapplication.ui.components.ImageGalleryCard
 import com.example.myapplication.ui.components.VideoPlaceholderCard
 import com.example.myapplication.ui.theme.InfoBackground
 import com.example.myapplication.ui.theme.TealEnd
@@ -63,16 +61,12 @@ fun InfoHelpScreen(
         ) {
             VideoPlaceholderCard()
 
-            AudioPlaceholderCard()
-
             Card {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text("Contact Support", style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "Have questions or need help? We're here to assist you!"
-                    )
+                    Text("Have questions or need help? We're here to assist you!")
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -123,8 +117,6 @@ fun InfoHelpScreen(
                     )
                 }
             }
-
-            ImageGalleryCard()
 
             Card {
                 Column(modifier = Modifier.padding(20.dp)) {

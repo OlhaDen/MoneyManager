@@ -115,7 +115,7 @@ class AuthViewModel(
             val result = authRepository.registerUser(email, pin)
             result
                 .onSuccess {
-                    userSessionManager.saveLoggedInUser(email)
+                    userSessionManager.rememberDevice(email)
                     _uiState.value = _uiState.value.copy(
                         loading = false,
                         authSuccess = true,
@@ -143,7 +143,7 @@ class AuthViewModel(
             val isCorrect = authRepository.verifyPin(email, pin)
 
             if (isCorrect) {
-                userSessionManager.saveLoggedInUser(email)
+                userSessionManager.rememberDevice(email)
                 _uiState.value = _uiState.value.copy(
                     loading = false,
                     authSuccess = true,
@@ -160,16 +160,24 @@ class AuthViewModel(
     }
 
     fun logout() {
-        userSessionManager.logout()
+        userSessionManager.forgetDevice()
         _uiState.value = AuthUiState()
     }
 
     fun isUserLoggedIn(): Boolean {
-        return userSessionManager.isLoggedIn()
+        return userSessionManager.isKnownDevice()
     }
 
     fun getLoggedInUserEmail(): String? {
-        return userSessionManager.getLoggedInUserEmail()
+        return userSessionManager.getRememberedEmail()
+    }
+
+    fun isKnownDevice(): Boolean {
+        return userSessionManager.isKnownDevice()
+    }
+
+    fun getKnownDeviceEmail(): String? {
+        return userSessionManager.getRememberedEmail()
     }
 
     private fun isValidEmail(email: String): Boolean {

@@ -11,12 +11,7 @@ import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.Wallet
-import androidx.compose.material3.Card
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +22,7 @@ import com.example.myapplication.domain.model.TransactionType
 import com.example.myapplication.ui.components.AddTransactionDialog
 import com.example.myapplication.ui.components.EmptyStateCard
 import com.example.myapplication.ui.components.ExpenseCard
+import com.example.myapplication.ui.components.ExpenseChartCard
 import com.example.myapplication.ui.components.GradientHeader
 import com.example.myapplication.ui.theme.BlueGradientEnd
 import com.example.myapplication.ui.theme.BlueGradientStart
@@ -57,7 +53,7 @@ fun HomeScreen(
                 title = "Expense Tracker",
                 gradientColors = listOf(BlueGradientStart, BlueGradientEnd),
                 balance = "$${"%.2f".format(uiState.netBalance)}",
-                subtitle = "All Time",
+                subtitle = filterLabel(uiState.selectedPeriod),
                 income = "+$${"%.2f".format(uiState.totalIncome)}",
                 expenses = "-$${"%.2f".format(uiState.totalExpenses)}",
                 icon = Icons.Outlined.TrendingDown,
@@ -90,20 +86,21 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    text = "All Time",
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
+            PeriodFilterCard(
+                selectedPeriod = uiState.selectedPeriod,
+                onPeriodSelected = { viewModel.setFilterPeriod(it) }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (uiState.transactions.isEmpty()) {
+            if (uiState.chartData.isNotEmpty()) {
+                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    ExpenseChartCard(data = uiState.chartData)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            if (uiState.filteredTransactions.isEmpty()) {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     EmptyStateCard(
                         title = "No expenses yet",
@@ -113,7 +110,7 @@ fun HomeScreen(
                 }
             } else {
                 Text(
-                    text = "${uiState.transactions.size} transactions",
+                    text = "${uiState.filteredTransactions.size} transactions",
                     modifier = Modifier.padding(horizontal = 20.dp),
                     color = Color.Gray
                 )
@@ -124,7 +121,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    uiState.transactions.forEach { transaction ->
+                    uiState.filteredTransactions.forEach { transaction ->
                         val isIncome = transaction.type == TransactionType.INCOME.name
                         val formattedAmount = if (isIncome) {
                             "+$${"%.2f".format(transaction.amount)}"
@@ -174,5 +171,60 @@ fun HomeScreen(
                 )
             }
         )
+    }
+}
+
+@Composable
+private fun PeriodFilterCard(
+    selectedPeriod: HomeFilterPeriod,
+    onPeriodSelected: (HomeFilterPeriod) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Filter period",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = selectedPeriod == HomeFilterPeriod.DAY,
+                    onClick = { onPeriodSelected(HomeFilterPeriod.DAY) },
+                    label = { Text("Day") }
+                )
+                FilterChip(
+                    selected = selectedPeriod == HomeFilterPeriod.WEEK,
+                    onClick = { onPeriodSelected(HomeFilterPeriod.WEEK) },
+                    label = { Text("Week") }
+                )
+                FilterChip(
+                    selected = selectedPeriod == HomeFilterPeriod.MONTH,
+                    onClick = { onPeriodSelected(HomeFilterPeriod.MONTH) },
+                    label = { Text("Month") }
+                )
+                FilterChip(
+                    selected = selectedPeriod == HomeFilterPeriod.ALL,
+                    onClick = { onPeriodSelected(HomeFilterPeriod.ALL) },
+                    label = { Text("All") }
+                )
+            }
+        }
+    }
+}
+
+private fun filterLabel(period: HomeFilterPeriod): String {
+    return when (period) {
+        HomeFilterPeriod.DAY -> "Today"
+        HomeFilterPeriod.WEEK -> "Last 7 days"
+        HomeFilterPeriod.MONTH -> "Last 30 days"
+        HomeFilterPeriod.ALL -> "All Time"
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -60,10 +61,11 @@ fun SignUpScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text("Email") },
+            placeholder = { Text("Email", color = Color(0xFFCAD4FF)) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            singleLine = true
+            singleLine = true,
+            colors = authFieldColors()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -71,10 +73,11 @@ fun SignUpScreen(
         OutlinedTextField(
             value = pin,
             onValueChange = { if (it.length <= 4) pin = it.filter(Char::isDigit) },
-            placeholder = { Text("PIN") },
+            placeholder = { Text("PIN", color = Color(0xFFCAD4FF)) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            singleLine = true
+            singleLine = true,
+            colors = authFieldColors()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -82,10 +85,11 @@ fun SignUpScreen(
         OutlinedTextField(
             value = confirmPin,
             onValueChange = { if (it.length <= 4) confirmPin = it.filter(Char::isDigit) },
-            placeholder = { Text("Confirm PIN") },
+            placeholder = { Text("Confirm PIN", color = Color(0xFFCAD4FF)) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            singleLine = true
+            singleLine = true,
+            colors = authFieldColors()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -130,7 +134,18 @@ fun SignUpScreen(
             onClick = onLoginClick,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("Already have an account? Log in", color = Color(0xFFD8DEFF))
+            Text("Already have an account? Log in", color = Color.White)
         }
     }
 }
+
+@Composable
+private fun authFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    focusedBorderColor = Color(0xFF8FA8FF),
+    unfocusedBorderColor = Color(0x668FA8FF),
+    cursorColor = Color.White,
+    focusedContainerColor = Color(0x221B2E6B),
+    unfocusedContainerColor = Color(0x221B2E6B)
+)

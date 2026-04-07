@@ -30,9 +30,16 @@ fun AppNavGraph(
     ) {
         composable(Screen.Splash.route) {
             SplashScreen(
-                isLoggedIn = authViewModel.isUserLoggedIn(),
+                isUserLoggedIn = authViewModel.isUserLoggedIn(),
+                isKnownDevice = authViewModel.isKnownDevice(),
                 onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToPin = {
+                    val email = authViewModel.getLoggedInUserEmail() ?: ""
+                    navController.navigate("pin/$email") {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 },

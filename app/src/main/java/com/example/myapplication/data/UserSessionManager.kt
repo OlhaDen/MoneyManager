@@ -6,23 +6,31 @@ class UserSessionManager(context: Context) {
 
     private val prefs = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
 
-    fun saveLoggedInUser(email: String) {
-        prefs.edit().putString(KEY_CURRENT_USER_EMAIL, email).apply()
+    fun rememberDevice(email: String) {
+        prefs.edit()
+            .putString(KEY_REMEMBERED_EMAIL, email)
+            .putBoolean(KEY_KNOWN_DEVICE, true)
+            .apply()
     }
 
-    fun getLoggedInUserEmail(): String? {
-        return prefs.getString(KEY_CURRENT_USER_EMAIL, null)
+    fun getRememberedEmail(): String? {
+        return prefs.getString(KEY_REMEMBERED_EMAIL, null)
     }
 
-    fun isLoggedIn(): Boolean {
-        return !getLoggedInUserEmail().isNullOrBlank()
+    fun isKnownDevice(): Boolean {
+        return prefs.getBoolean(KEY_KNOWN_DEVICE, false) &&
+                !getRememberedEmail().isNullOrBlank()
     }
 
-    fun logout() {
-        prefs.edit().remove(KEY_CURRENT_USER_EMAIL).apply()
+    fun forgetDevice() {
+        prefs.edit()
+            .remove(KEY_REMEMBERED_EMAIL)
+            .remove(KEY_KNOWN_DEVICE)
+            .apply()
     }
 
     companion object {
-        private const val KEY_CURRENT_USER_EMAIL = "current_user_email"
+        private const val KEY_REMEMBERED_EMAIL = "remembered_email"
+        private const val KEY_KNOWN_DEVICE = "known_device"
     }
 }
