@@ -34,7 +34,9 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onScheduledClick: () -> Unit,
     onInfoClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onHistoryClick: () -> Unit,
+    onBalanceChartClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDialog by remember { mutableStateOf(false) }
@@ -57,6 +59,8 @@ fun HomeScreen(
                 income = "+$${"%.2f".format(uiState.totalIncome)}",
                 expenses = "-$${"%.2f".format(uiState.totalExpenses)}",
                 icon = Icons.Outlined.TrendingDown,
+                onHistoryClick = onHistoryClick,
+                onBalanceChartClick = onBalanceChartClick,
                 topContent = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -93,13 +97,6 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (uiState.chartData.isNotEmpty()) {
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    ExpenseChartCard(data = uiState.chartData)
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
             if (uiState.filteredTransactions.isEmpty()) {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     EmptyStateCard(
@@ -121,7 +118,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    uiState.filteredTransactions.forEach { transaction ->
+                    uiState.filteredTransactions.take(5).forEach { transaction ->
                         val isIncome = transaction.type == TransactionType.INCOME.name
                         val formattedAmount = if (isIncome) {
                             "+$${"%.2f".format(transaction.amount)}"
@@ -141,10 +138,27 @@ fun HomeScreen(
                             }
                         )
                     }
+                    
+                    if (uiState.filteredTransactions.size > 5) {
+                        TextButton(
+                            onClick = onHistoryClick,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("View all transactions")
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            // Move Chart to the bottom of the list
+            if (uiState.chartData.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    ExpenseChartCard(data = uiState.chartData)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(120.dp))
         }
 
         FloatingActionButton(
@@ -174,6 +188,7 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PeriodFilterCard(
     selectedPeriod: HomeFilterPeriod,
@@ -192,8 +207,9 @@ private fun PeriodFilterCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 FilterChip(
                     selected = selectedPeriod == HomeFilterPeriod.DAY,
@@ -211,6 +227,11 @@ private fun PeriodFilterCard(
                     label = { Text("Month") }
                 )
                 FilterChip(
+                    selected = selectedPeriod == HomeFilterPeriod.YEAR,
+                    onClick = { onPeriodSelected(HomeFilterPeriod.YEAR) },
+                    label = { Text("Year") }
+                )
+                FilterChip(
                     selected = selectedPeriod == HomeFilterPeriod.ALL,
                     onClick = { onPeriodSelected(HomeFilterPeriod.ALL) },
                     label = { Text("All") }
@@ -225,6 +246,7 @@ private fun filterLabel(period: HomeFilterPeriod): String {
         HomeFilterPeriod.DAY -> "Today"
         HomeFilterPeriod.WEEK -> "Last 7 days"
         HomeFilterPeriod.MONTH -> "Last 30 days"
+        HomeFilterPeriod.YEAR -> "Last year"
         HomeFilterPeriod.ALL -> "All Time"
     }
 }

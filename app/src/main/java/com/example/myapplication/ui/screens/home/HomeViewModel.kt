@@ -14,12 +14,17 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 enum class HomeFilterPeriod {
-    DAY, WEEK, MONTH, ALL
+    DAY, WEEK, MONTH, YEAR, ALL
 }
 
 data class ChartCategoryData(
     val category: String,
     val amount: Double
+)
+
+data class BalanceHistoryData(
+    val date: LocalDate,
+    val balance: Double
 )
 
 data class HomeUiState(
@@ -29,7 +34,8 @@ data class HomeUiState(
     val totalExpenses: Double = 0.0,
     val netBalance: Double = 0.0,
     val selectedPeriod: HomeFilterPeriod = HomeFilterPeriod.ALL,
-    val chartData: List<ChartCategoryData> = emptyList()
+    val chartData: List<ChartCategoryData> = emptyList(),
+    val balanceHistory: List<BalanceHistoryData> = emptyList()
 )
 
 class HomeViewModel(
@@ -75,6 +81,7 @@ class HomeViewModel(
                 HomeFilterPeriod.DAY -> transactionDate.isEqual(today)
                 HomeFilterPeriod.WEEK -> !transactionDate.isBefore(today.minusDays(6))
                 HomeFilterPeriod.MONTH -> !transactionDate.isBefore(today.minusDays(29))
+                HomeFilterPeriod.YEAR -> !transactionDate.isBefore(today.minusYears(1))
                 HomeFilterPeriod.ALL -> true
             }
         }
@@ -98,6 +105,24 @@ class HomeViewModel(
             }
             .sortedByDescending { it.amount }
 
+        // Calculate balance history
+        val balanceHistory = allTransactions
+            .mapNotNull { transaction ->
+                val date = runCatching { LocalDate.parse(transaction.date) }.getOrNull() ?: return@mapNotNull null
+                val amount = if (transaction.type == TransactionType.INCOME.name) transaction.amount else -transaction.amount
+                date to amount
+            }
+            .groupBy { it.first }
+            .mapValues { entry -> entry.value.sumOf { it.second } }
+            .toSortedMap()
+            .let { sortedDailySums ->
+                var currentBalance = 0.0
+                sortedDailySums.map { (date, dailySum) ->
+                    currentBalance += dailySum
+                    BalanceHistoryData(date, currentBalance)
+                }
+            }
+
         _uiState.value = HomeUiState(
             allTransactions = allTransactions,
             filteredTransactions = filtered,
@@ -105,7 +130,8 @@ class HomeViewModel(
             totalExpenses = expenses,
             netBalance = income - expenses,
             selectedPeriod = period,
-            chartData = chartData
+            chartData = chartData,
+            balanceHistory = balanceHistory
         )
     }
 

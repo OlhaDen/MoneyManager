@@ -1,21 +1,24 @@
 package com.example.myapplication.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.ShowChart
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.LightText
 
 @Composable
@@ -27,6 +30,8 @@ fun GradientHeader(
     income: String = "+$0.00",
     expenses: String = "-$0.00",
     icon: ImageVector,
+    onHistoryClick: (() -> Unit)? = null,
+    onBalanceChartClick: (() -> Unit)? = null,
     topContent: @Composable (RowScope.() -> Unit)? = null
 ) {
     Box(
@@ -65,12 +70,61 @@ fun GradientHeader(
                     ) {
                         Column {
                             Text("Net Balance", color = LightText)
-                            Text(
-                                text = balance,
-                                color = Color.White,
-                                style = MaterialTheme.typography.headlineMedium
-                            )
-                            Text(subtitle, color = LightText)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = balance,
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.headlineMedium
+                                )
+                                
+                                if (onBalanceChartClick != null) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = onBalanceChartClick,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.ShowChart,
+                                            contentDescription = "Show trend",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            if (onHistoryClick != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Surface(
+                                    color = Color.White.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { onHistoryClick() }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "See History",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(subtitle, color = LightText, style = MaterialTheme.typography.bodySmall)
                         }
 
                         Box(

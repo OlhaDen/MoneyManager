@@ -16,6 +16,8 @@ import com.example.myapplication.ui.screens.info.InfoHelpScreen
 import com.example.myapplication.ui.screens.scheduled.ScheduledPaymentsScreen
 import com.example.myapplication.ui.screens.scheduled.ScheduledPaymentsViewModel
 import com.example.myapplication.ui.screens.splash.SplashScreen
+import com.example.myapplication.ui.screens.history.HistoryScreen
+import com.example.myapplication.ui.screens.history.BalanceChartScreen
 
 @Composable
 fun AppNavGraph(
@@ -107,6 +109,8 @@ fun AppNavGraph(
                 viewModel = homeViewModel,
                 onScheduledClick = { navController.navigate(Screen.Scheduled.route) },
                 onInfoClick = { navController.navigate(Screen.InfoHelp.route) },
+                onHistoryClick = { navController.navigate(Screen.History.route) },
+                onBalanceChartClick = { navController.navigate(Screen.BalanceChart.route) },
                 onLogoutClick = {
                     authViewModel.logout()
                     navController.navigate(Screen.SignIn.route) {
@@ -119,6 +123,20 @@ fun AppNavGraph(
         composable(Screen.Scheduled.route) {
             ScheduledPaymentsScreen(
                 viewModel = scheduledPaymentsViewModel,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.History.route) {
+            HistoryScreen(
+                viewModel = homeViewModel,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.BalanceChart.route) {
+            BalanceChartScreen(
+                viewModel = homeViewModel,
                 onBackClick = { navController.popBackStack() }
             )
         }
