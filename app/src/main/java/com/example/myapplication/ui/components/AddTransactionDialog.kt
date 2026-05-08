@@ -2,9 +2,11 @@ package com.example.myapplication.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.domain.model.TransactionType
 import java.time.LocalDate
@@ -29,6 +31,7 @@ fun AddTransactionDialog(
     var category by remember { mutableStateOf("Food") }
     var description by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(LocalDate.now().toString()) }
+    var amountError by remember { mutableStateOf<String?>(null) }
 
     val expenseCategories = listOf(
         "Food", "Transport", "Shopping", "Bills", "Entertainment", "Health", "Other"
@@ -70,11 +73,17 @@ fun AddTransactionDialog(
 
                 OutlinedTextField(
                     value = amount,
-                    onValueChange = { amount = it },
+                    onValueChange = { 
+                        amount = it
+                        amountError = null
+                    },
                     label = { Text("Amount") },
                     placeholder = { Text("0.00") },
+                    isError = amountError != null,
+                    supportingText = amountError?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
 
                 CategoryDropdown(
@@ -113,6 +122,8 @@ fun AddTransactionDialog(
                                 selectedType
                             )
                             onDismiss()
+                        } else {
+                            amountError = "Please enter a valid amount"
                         }
                     },
                     modifier = Modifier.fillMaxWidth()

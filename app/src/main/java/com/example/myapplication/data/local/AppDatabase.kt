@@ -15,7 +15,7 @@ import com.example.myapplication.data.local.entity.UserEntity
         com.example.myapplication.data.local.entity.TransactionEntity::class,
         com.example.myapplication.data.local.entity.ScheduledPaymentEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

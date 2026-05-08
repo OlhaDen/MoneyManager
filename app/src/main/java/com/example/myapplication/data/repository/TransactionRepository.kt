@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 class TransactionRepository(
     private val transactionDao: TransactionDao
 ) {
-    fun getAllTransactions(): Flow<List<TransactionEntity>> {
-        return transactionDao.getAllTransactions()
+    fun getAllTransactions(userId: Int): Flow<List<TransactionEntity>> {
+        return transactionDao.getAllTransactions(userId)
     }
 
     suspend fun insertTransaction(transaction: TransactionEntity) {

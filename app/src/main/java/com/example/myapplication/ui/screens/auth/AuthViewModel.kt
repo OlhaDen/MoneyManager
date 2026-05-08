@@ -115,13 +115,23 @@ class AuthViewModel(
             val result = authRepository.registerUser(email, pin)
             result
                 .onSuccess {
-                    userSessionManager.rememberDevice(email)
-                    _uiState.value = _uiState.value.copy(
-                        loading = false,
-                        authSuccess = true,
-                        userLoggedIn = true,
-                        email = email
-                    )
+                    viewModelScope.launch {
+                        val user = authRepository.getUserByEmail(email)
+                        if (user != null) {
+                            userSessionManager.rememberDevice(email, user.id)
+                            _uiState.value = _uiState.value.copy(
+                                loading = false,
+                                authSuccess = true,
+                                userLoggedIn = true,
+                                email = email
+                            )
+                        } else {
+                            _uiState.value = _uiState.value.copy(
+                                loading = false,
+                                errorMessage = "User not found after registration"
+                            )
+                        }
+                    }
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
@@ -140,10 +150,11 @@ class AuthViewModel(
                 authSuccess = false
             )
 
-            val isCorrect = authRepository.verifyPin(email, pin)
+            val user = authRepository.getUserByEmail(email)
+            val isCorrect = user?.pin == pin
 
-            if (isCorrect) {
-                userSessionManager.rememberDevice(email)
+            if (isCorrect && user != null) {
+                userSessionManager.rememberDevice(email, user.id)
                 _uiState.value = _uiState.value.copy(
                     loading = false,
                     authSuccess = true,

@@ -5,11 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +39,9 @@ fun HomeScreen(
     onHistoryClick: () -> Unit,
     onBalanceChartClick: () -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.refreshUserSession()
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDialog by remember { mutableStateOf(false) }
 
@@ -55,12 +59,9 @@ fun HomeScreen(
                 title = "Expense Tracker",
                 gradientColors = listOf(BlueGradientStart, BlueGradientEnd),
                 balance = "$${"%.2f".format(uiState.netBalance)}",
-                subtitle = filterLabel(uiState.selectedPeriod),
                 income = "+$${"%.2f".format(uiState.totalIncome)}",
                 expenses = "-$${"%.2f".format(uiState.totalExpenses)}",
-                icon = Icons.Outlined.TrendingDown,
-                onHistoryClick = onHistoryClick,
-                onBalanceChartClick = onBalanceChartClick,
+                icon = Icons.Outlined.Wallet,
                 topContent = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -74,18 +75,53 @@ fun HomeScreen(
                         )
 
                         Row {
-                            IconButton(onClick = onScheduledClick) {
-                                Icon(Icons.Outlined.Schedule, null, tint = Color.White)
+                            var showMenu by remember { mutableStateOf(false) }
+                            
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.MoreVert, "Menu", tint = Color.White)
                             }
-                            IconButton(onClick = onInfoClick) {
-                                Icon(Icons.Outlined.Info, null, tint = Color.White)
-                            }
-                            IconButton(onClick = onLogoutClick) {
-                                Icon(Icons.Outlined.Logout, null, tint = Color.White)
+                            
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Scheduled Payments") },
+                                    onClick = {
+                                        showMenu = false
+                                        onScheduledClick()
+                                    },
+                                    leadingIcon = { Icon(Icons.Outlined.Schedule, null) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("App Info") },
+                                    onClick = {
+                                        showMenu = false
+                                        onInfoClick()
+                                    },
+                                    leadingIcon = { Icon(Icons.Outlined.Info, null) }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Transaction History") },
+                                    onClick = {
+                                        showMenu = false
+                                        onHistoryClick()
+                                    },
+                                    leadingIcon = { Icon(Icons.Outlined.History, null) }
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("Logout") },
+                                    onClick = {
+                                        showMenu = false
+                                        onLogoutClick()
+                                    },
+                                    leadingIcon = { Icon(Icons.Outlined.Logout, null) }
+                                )
                             }
                         }
                     }
-                }
+                },
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -95,19 +131,26 @@ fun HomeScreen(
                 onPeriodSelected = { viewModel.setFilterPeriod(it) }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            if (uiState.chartData.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    ExpenseChartCard(data = uiState.chartData)
+                }
+            }
 
-            if (uiState.filteredTransactions.isEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (uiState.recentTransactions.isEmpty()) {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     EmptyStateCard(
                         title = "No expenses yet",
-                        subtitle = "Tap the + button to add your first expense",
+                        subtitle = "Add your first expense to see it here",
                         icon = Icons.Outlined.Wallet
                     )
                 }
             } else {
                 Text(
-                    text = "${uiState.filteredTransactions.size} transactions",
+                    text = "Recent transactions",
                     modifier = Modifier.padding(horizontal = 20.dp),
                     color = Color.Gray
                 )
@@ -118,7 +161,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    uiState.filteredTransactions.take(5).forEach { transaction ->
+                    uiState.recentTransactions.forEach { transaction ->
                         val isIncome = transaction.type == TransactionType.INCOME.name
                         val formattedAmount = if (isIncome) {
                             "+$${"%.2f".format(transaction.amount)}"
@@ -138,27 +181,10 @@ fun HomeScreen(
                             }
                         )
                     }
-                    
-                    if (uiState.filteredTransactions.size > 5) {
-                        TextButton(
-                            onClick = onHistoryClick,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        ) {
-                            Text("View all transactions")
-                        }
-                    }
                 }
             }
 
-            // Move Chart to the bottom of the list
-            if (uiState.chartData.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    ExpenseChartCard(data = uiState.chartData)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
         FloatingActionButton(

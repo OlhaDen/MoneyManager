@@ -31,6 +31,9 @@ fun ScheduledPaymentsScreen(
     viewModel: ScheduledPaymentsViewModel,
     onBackClick: () -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.refreshUserSession()
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf("Upcoming") }
     var showDialog by remember { mutableStateOf(false) }
@@ -40,6 +43,9 @@ fun ScheduledPaymentsScreen(
     } else {
         uiState.paidPayments
     }
+
+    val totalIncome = payments.filter { it.type == TransactionType.INCOME.name }.sumOf { it.amount }
+    val totalExpenses = payments.filter { it.type == TransactionType.EXPENSE.name }.sumOf { it.amount }
 
     Box(
         modifier = Modifier
@@ -54,10 +60,10 @@ fun ScheduledPaymentsScreen(
             GradientHeader(
                 title = "Scheduled Payments",
                 gradientColors = listOf(PinkStart, PinkEnd),
-                balance = uiState.upcomingPayments.size.toString(),
-                subtitle = "Upcoming Payments",
-                income = "",
-                expenses = "",
+                balance = "$${"%.2f".format(uiState.globalNetBalance)}",
+                subtitle = "$selectedTab Payments",
+                income = "+$${"%.2f".format(totalIncome)}",
+                expenses = "-$${"%.2f".format(totalExpenses)}",
                 icon = Icons.Outlined.Schedule,
                 topContent = {
                     Row(
@@ -87,20 +93,38 @@ fun ScheduledPaymentsScreen(
                         .fillMaxWidth()
                         .padding(6.dp)
                 ) {
-                    Button(
-                        onClick = { selectedTab = "Upcoming" },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Upcoming")
+                    if (selectedTab == "Upcoming") {
+                        Button(
+                            onClick = { selectedTab = "Upcoming" },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Upcoming")
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { selectedTab = "Upcoming" },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Upcoming")
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    OutlinedButton(
-                        onClick = { selectedTab = "Paid" },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Paid")
+                    if (selectedTab == "Paid") {
+                        Button(
+                            onClick = { selectedTab = "Paid" },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Paid")
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { selectedTab = "Paid" },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Paid")
+                        }
                     }
                 }
             }
@@ -125,7 +149,7 @@ fun ScheduledPaymentsScreen(
                 }
             } else {
                 Text(
-                    text = "${payments.size} payments",
+                    text = "${payments.size} ${if (payments.size == 1) "payment" else "payments"}",
                     modifier = Modifier.padding(horizontal = 20.dp),
                     color = Color.Gray
                 )

@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class ScheduledPaymentEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val userId: Int,
     val amount: Double,
     val category: String,
     val description: String,

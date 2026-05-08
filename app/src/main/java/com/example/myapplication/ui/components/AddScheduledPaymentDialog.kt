@@ -2,17 +2,21 @@ package com.example.myapplication.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.domain.model.RecurringType
 import com.example.myapplication.domain.model.TransactionType
@@ -40,6 +44,7 @@ fun AddScheduledPaymentDialog(
     var description by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf(LocalDate.now().toString()) }
     var recurring by remember { mutableStateOf(RecurringType.NONE) }
+    var amountError by remember { mutableStateOf<String?>(null) }
 
     val expenseCategories = listOf(
         "Food", "Transport", "Shopping", "Bills", "Entertainment", "Health", "Other"
@@ -89,11 +94,17 @@ fun AddScheduledPaymentDialog(
 
                 OutlinedTextField(
                     value = amount,
-                    onValueChange = { amount = it },
+                    onValueChange = { 
+                        amount = it
+                        amountError = null
+                    },
                     label = { Text("Amount") },
                     placeholder = { Text("0.00") },
+                    isError = amountError != null,
+                    supportingText = amountError?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
 
                 CategoryDropdownSimple(
@@ -141,6 +152,8 @@ fun AddScheduledPaymentDialog(
                                 recurring
                             )
                             onDismiss()
+                        } else {
+                            amountError = "Please enter a valid amount"
                         }
                     },
                     modifier = Modifier.fillMaxWidth()

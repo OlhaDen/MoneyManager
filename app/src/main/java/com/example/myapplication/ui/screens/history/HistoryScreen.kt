@@ -14,11 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.domain.model.TransactionType
 import com.example.myapplication.ui.components.ExpenseCard
+import com.example.myapplication.ui.screens.home.HomeFilterPeriod
 import com.example.myapplication.ui.screens.home.HomeViewModel
 import com.example.myapplication.ui.theme.HomeBackground
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HistoryScreen(
     viewModel: HomeViewModel,
@@ -27,7 +30,7 @@ fun HistoryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
 
-    val filteredList = uiState.allTransactions.filter {
+    val filteredList = uiState.filteredTransactions.filter {
         it.description.contains(searchQuery, ignoreCase = true) ||
         it.category.contains(searchQuery, ignoreCase = true)
     }
@@ -53,20 +56,43 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Search transactions...") },
-                leadingIcon = { Icon(Icons.Outlined.Search, null) },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                ),
-                shape = MaterialTheme.shapes.medium
-            )
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search transactions...") },
+                        leadingIcon = { Icon(Icons.Outlined.Search, null) },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        HomeFilterPeriod.values().forEach { period ->
+                            FilterChip(
+                                selected = uiState.selectedPeriod == period,
+                                onClick = { viewModel.setFilterPeriod(period) },
+                                label = { 
+                                    Text(period.name.lowercase().replaceFirstChar { it.uppercase() }) 
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),

@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 class ScheduledPaymentRepository(
     private val scheduledPaymentDao: ScheduledPaymentDao
 ) {
-    fun getAllPayments(): Flow<List<ScheduledPaymentEntity>> {
-        return scheduledPaymentDao.getAllPayments()
+    fun getAllPayments(userId: Int): Flow<List<ScheduledPaymentEntity>> {
+        return scheduledPaymentDao.getAllPayments(userId)
     }
 
     suspend fun insertPayment(payment: ScheduledPaymentEntity) {

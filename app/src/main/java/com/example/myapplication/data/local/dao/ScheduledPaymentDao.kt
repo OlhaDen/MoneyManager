@@ -14,8 +14,8 @@ interface ScheduledPaymentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPayment(payment: ScheduledPaymentEntity)
 
-    @Query("SELECT * FROM scheduled_payments ORDER BY id DESC")
-    fun getAllPayments(): Flow<List<ScheduledPaymentEntity>>
+    @Query("SELECT * FROM scheduled_payments WHERE userId = :userId ORDER BY id DESC")
+    fun getAllPayments(userId: Int): Flow<List<ScheduledPaymentEntity>>
 
     @Query("DELETE FROM scheduled_payments WHERE id = :id")
     suspend fun deletePaymentById(id: Int)

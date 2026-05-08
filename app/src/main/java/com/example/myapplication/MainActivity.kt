@@ -29,7 +29,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 val homeViewModel: HomeViewModel = viewModel(
-                    factory = HomeViewModelFactory(appContainer.transactionRepository)
+                    factory = HomeViewModelFactory(
+                        appContainer.transactionRepository,
+                        appContainer.authRepository,
+                        appContainer.userSessionManager
+                    )
                 )
 
                 val authViewModel: AuthViewModel = viewModel(
@@ -42,7 +46,9 @@ class MainActivity : ComponentActivity() {
                 val scheduledPaymentsViewModel: ScheduledPaymentsViewModel = viewModel(
                     factory = ScheduledPaymentsViewModelFactory(
                         scheduledPaymentRepository = appContainer.scheduledPaymentRepository,
-                        transactionRepository = appContainer.transactionRepository
+                        transactionRepository = appContainer.transactionRepository,
+                        authRepository = appContainer.authRepository,
+                        userSessionManager = appContainer.userSessionManager
                     )
                 )
 
