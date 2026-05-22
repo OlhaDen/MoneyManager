@@ -62,6 +62,7 @@ fun HomeScreen(
                 income = "+$${"%.2f".format(uiState.totalIncome)}",
                 expenses = "-$${"%.2f".format(uiState.totalExpenses)}",
                 icon = Icons.Outlined.Wallet,
+                onChartClick = onBalanceChartClick,
                 topContent = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -264,15 +265,5 @@ private fun PeriodFilterCard(
                 )
             }
         }
-    }
-}
-
-private fun filterLabel(period: HomeFilterPeriod): String {
-    return when (period) {
-        HomeFilterPeriod.DAY -> "Today"
-        HomeFilterPeriod.WEEK -> "Last 7 days"
-        HomeFilterPeriod.MONTH -> "Last 30 days"
-        HomeFilterPeriod.YEAR -> "Last year"
-        HomeFilterPeriod.ALL -> "All Time"
     }
 }

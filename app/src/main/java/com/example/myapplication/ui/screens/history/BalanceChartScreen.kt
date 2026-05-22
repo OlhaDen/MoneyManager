@@ -1,26 +1,31 @@
 package com.example.myapplication.ui.screens.history
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.myapplication.ui.screens.home.BalanceHistoryData
 import com.example.myapplication.ui.screens.home.HomeViewModel
+import com.example.myapplication.ui.theme.BlueGradientStart
 import com.example.myapplication.ui.theme.HomeBackground
 import java.time.format.DateTimeFormatter
 
@@ -35,14 +40,21 @@ fun BalanceChartScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Balance Over Time") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Balance Analytics",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = HomeBackground
+                )
             )
         },
         containerColor = HomeBackground
@@ -51,56 +63,78 @@ fun BalanceChartScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
-            Text(
-                text = "Net Balance Trend",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Total Balance: $${"%.2f".format(uiState.netBalance)}",
-                color = Color.Gray,
-                fontSize = 14.sp
-            )
+            // Summary Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = BlueGradientStart.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(24.dp),
+                                tint = BlueGradientStart
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Current Balance", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                text = "$${"%.2f".format(uiState.netBalance)}",
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    if (history.size < 2) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Not enough data to show trend", color = Color.Gray)
+                        }
+                    } else {
+                        BalanceLineChart(
+                            history = history,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(220.dp)
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            if (history.size < 2) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Add more transactions to see the trend")
-                }
+            Text(
+                text = "Trend History",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (history.isEmpty()) {
+                Text("No transaction history found.", color = Color.Gray)
             } else {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(350.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    BalanceLineChart(
-                        history = history,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 16.dp, bottom = 40.dp, start = 52.dp, end = 20.dp)
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Text("History Points", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-                history.reversed().take(10).forEach { data ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(data.date.toString(), color = Color.Gray)
-                        Text(
-                            text = "$${"%.2f".format(data.balance)}",
-                            fontWeight = FontWeight.Bold,
-                            color = if (data.balance >= 0) Color(0xFF4CAF50) else Color(0xFFE91E63)
-                        )
-                    }
+                history.reversed().forEach { data ->
+                    HistoryItem(data)
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -108,92 +142,111 @@ fun BalanceChartScreen(
 }
 
 @Composable
+private fun HistoryItem(data: BalanceHistoryData) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = data.date.format(DateTimeFormatter.ofPattern("MMMM dd, yyyy")),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = data.date.format(DateTimeFormatter.ofPattern("EEEE")),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Gray
+                )
+            }
+            Text(
+                text = "$${"%.2f".format(data.balance)}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (data.balance >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)
+            )
+        }
+    }
+}
+
+@Composable
 fun BalanceLineChart(
-    history: List<com.example.myapplication.ui.screens.home.BalanceHistoryData>,
+    history: List<BalanceHistoryData>,
     modifier: Modifier = Modifier
 ) {
-    val textMeasurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(
-        color = Color.Gray,
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Medium
-    )
-
-    val minBalance = history.minOf { it.balance }.let { if (it > 0) 0.0 else it }
-    val maxBalance = history.maxOf { it.balance }.let { if (it < 0) 0.0 else it }
+    val minB = history.minOf { it.balance }
+    val maxB = history.maxOf { it.balance }
+    
+    // Add buffer to avoid chart hitting the edges
+    val rangeRaw = (maxB - minB).coerceAtLeast(1.0)
+    val minBalance = minB - (rangeRaw * 0.15)
+    val maxBalance = maxB + (rangeRaw * 0.15)
     val range = (maxBalance - minBalance).coerceAtLeast(1.0)
     
-    val dateFormatter = DateTimeFormatter.ofPattern("dd/MM")
+    val chartColor = BlueGradientStart
 
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
         
-        if (width <= 0 || height <= 0) return@Canvas
+        if (width <= 0 || height <= 0 || history.size < 2) return@Canvas
 
         val spacing = width / (history.size - 1)
 
-        // Draw Y-axis labels
-        val yLabels = listOf(maxBalance, (maxBalance + minBalance) / 2, minBalance)
-        yLabels.forEach { labelValue ->
-            val normalizedY = (labelValue - minBalance) / range
-            val y = height - (normalizedY.toFloat() * height)
-            
-            val amountText = "$${labelValue.toInt()}"
-            val textLayoutResult = textMeasurer.measure(amountText, labelStyle)
-            
-            drawText(
-                textMeasurer = textMeasurer,
-                text = amountText,
-                style = labelStyle,
-                topLeft = Offset(-textLayoutResult.size.width.toFloat() - 8.dp.toPx(), y - textLayoutResult.size.height / 2f)
-            )
-            
-            // Grid line
-            drawLine(
-                color = Color.LightGray.copy(alpha = 0.5f),
-                start = Offset(0f, y),
-                end = Offset(width, y),
-                strokeWidth = 1.dp.toPx()
-            )
+        val points = history.mapIndexed { index, data ->
+            val x = index * spacing
+            val normalizedY = ((data.balance - minBalance) / range).toFloat()
+            val y = height - (normalizedY * height)
+            Offset(x, y)
         }
 
-        // Draw Path
-        val path = Path()
-        history.forEachIndexed { index, data ->
-            val x = index * spacing
-            val normalizedY = (data.balance - minBalance) / range
-            val y = height - (normalizedY.toFloat() * height)
-
-            if (index == 0) {
-                path.moveTo(x, y)
-            } else {
-                path.lineTo(x, y)
+        // Draw Area Gradient
+        val fillPath = Path().apply {
+            if (points.isNotEmpty()) {
+                moveTo(points.first().x, height)
+                points.forEach { lineTo(it.x, it.y) }
+                lineTo(points.last().x, height)
+                close()
             }
-            
-            // Draw X-axis labels (Date)
-            if (index == 0 || index == history.size - 1 || (history.size > 5 && index == history.size / 2)) {
-                val dateText = data.date.format(dateFormatter)
-                val textLayoutResult = textMeasurer.measure(dateText, labelStyle)
-                drawText(
-                    textMeasurer = textMeasurer,
-                    text = dateText,
-                    style = labelStyle,
-                    topLeft = Offset(x - textLayoutResult.size.width / 2f, height + 8.dp.toPx())
+        }
+        
+        if (points.isNotEmpty()) {
+            drawPath(
+                path = fillPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(chartColor.copy(alpha = 0.3f), Color.Transparent)
+                )
+            )
+
+            // Draw Line
+            val strokePath = Path().apply {
+                moveTo(points.first().x, points.first().y)
+                points.forEach { lineTo(it.x, it.y) }
+            }
+            drawPath(
+                path = strokePath,
+                color = chartColor,
+                style = Stroke(width = 3.dp.toPx())
+            )
+
+            // Draw Points
+            points.forEach { center ->
+                drawCircle(color = Color.White, radius = 4.dp.toPx(), center = center)
+                drawCircle(
+                    color = chartColor, 
+                    radius = 4.dp.toPx(), 
+                    center = center, 
+                    style = Stroke(width = 2.dp.toPx())
                 )
             }
-
-            drawCircle(
-                color = Color(0xFF2196F3),
-                radius = 3.dp.toPx(),
-                center = Offset(x, y)
-            )
         }
-
-        drawPath(
-            path = path,
-            color = Color(0xFF2196F3),
-            style = Stroke(width = 2.dp.toPx())
-        )
     }
 }

@@ -1,15 +1,21 @@
 package com.example.myapplication.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.domain.model.TransactionType
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +36,8 @@ fun AddTransactionDialog(
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Food") }
     var description by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf(LocalDate.now().toString()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var amountError by remember { mutableStateOf<String?>(null) }
 
     val expenseCategories = listOf(
@@ -48,6 +55,32 @@ fun AddTransactionDialog(
 
     LaunchedEffect(selectedType) {
         category = if (selectedType == TransactionType.EXPENSE) "Food" else "Salary"
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        selectedDate = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
     }
 
     AlertDialog(
@@ -102,11 +135,18 @@ fun AddTransactionDialog(
                 )
 
                 OutlinedTextField(
-                    value = date,
-                    onValueChange = { date = it },
+                    value = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    onValueChange = { },
                     label = { Text("Date") },
-                    placeholder = { Text("YYYY-MM-DD") },
-                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Outlined.CalendarMonth, contentDescription = "Select date")
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
                     shape = RoundedCornerShape(16.dp)
                 )
 
@@ -118,7 +158,7 @@ fun AddTransactionDialog(
                                 parsedAmount,
                                 category,
                                 if (description.isBlank()) category else description,
-                                date,
+                                selectedDate.toString(),
                                 selectedType
                             )
                             onDismiss()
