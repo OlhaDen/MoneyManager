@@ -1,25 +1,31 @@
 package com.example.myapplication.ui.screens.splash
 
-import android.net.Uri
-import androidx.annotation.OptIn
+import android.media.MediaPlayer
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
+import com.example.myapplication.ui.theme.BlueGradientEnd
+import com.example.myapplication.ui.theme.BlueGradientStart
 import kotlinx.coroutines.delay
 
-@OptIn(UnstableApi::class)
 @Composable
 fun SplashScreen(
     isUserLoggedIn: Boolean,
@@ -29,9 +35,20 @@ fun SplashScreen(
     onNavigateToSignIn: () -> Unit
 ) {
     val context = LocalContext.current
-    
-    // Funkcja pomocnicza do nawigacji
-    val navigateNext = {
+
+    // Odtwarzanie dźwięku powitalnego
+    DisposableEffect(Unit) {
+        val mediaPlayer = MediaPlayer.create(context, R.raw.splash_sound)
+        mediaPlayer?.start()
+
+        onDispose {
+            mediaPlayer?.release()
+        }
+    }
+
+    // Opóźnienie przed nawigacją
+    LaunchedEffect(Unit) {
+        delay(2500)
         when {
             isUserLoggedIn -> onNavigateToHome()
             isKnownDevice -> onNavigateToPin()
@@ -39,53 +56,59 @@ fun SplashScreen(
         }
     }
 
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            // Używamy bezpieczniejszego formatu URI
-            val videoUri = Uri.parse("android.resource://${context.packageName}/raw/smartest_rick_roll")
-            setMediaItem(MediaItem.fromUri(videoUri))
-            prepare()
-            playWhenReady = true
-        }
-    }
-
-    // Bezpiecznik: jeśli wideo nie skończy się w ciągu 6 sekund, przejdź dalej
-    LaunchedEffect(Unit) {
-        delay(6000)
-        navigateNext()
-    }
-
-    DisposableEffect(exoPlayer) {
-        val listener = object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_ENDED) {
-                    navigateNext()
-                }
-            }
-            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                // Jeśli błąd wideo (np. ten plaintext), przejdź od razu dalej
-                navigateNext()
-            }
-        }
-        exoPlayer.addListener(listener)
-        onDispose {
-            exoPlayer.release()
-        }
-    }
+    // Animacja pulsującego logo
+    val transition = rememberInfiniteTransition(label = "splash_anim")
+    val scale = transition.animateFloat(
+        initialValue = 0.92f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(listOf(BlueGradientStart, BlueGradientEnd))
+            ),
         contentAlignment = Alignment.Center
     ) {
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    player = exoPlayer
-                    useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                }
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Białe koło z ikoną portfela (logo)
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .scale(scale.value)
+                    .background(Color.White, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AccountBalanceWallet,
+                    contentDescription = null,
+                    tint = BlueGradientEnd,
+                    modifier = Modifier.size(56.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Text(
+                text = "MoneyManager",
+                color = Color.White,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Manage your finances with ease",
+                color = Color(0xFFDDE4FF),
+                fontSize = 16.sp
+            )
+        }
     }
 }
