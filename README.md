@@ -5,3 +5,9 @@ Może dodawać nowe operacje finansowe, które są zapisywane w lokalnej bazie d
 Każda transakcja jest przypisana do konkretnego użytkownika przez `userId`, dzięki czemu dane różnych użytkowników są od siebie oddzielone. 
 Aplikacja automatycznie aktualizuje saldo i listę transakcji po każdej zmianie. Dodatkowo użytkownik może przeglądać historię operacji oraz zarządzać zaplanowanymi płatnościami. 
 Całość działa lokalnie na urządzeniu i wykorzystuje architekturę MVVM, co pozwala oddzielić interfejs od logiki i bazy danych.
+
+## Makieta aplikacji
+Link do makiety aplikacji:
+
+[Expense Tracker Mobile App – Figma](https://www.figma.com/make/2hZU3h7LnoRbklkYWf9zop/Expense-Tracking-Mobile-App?fullscreen=1&t=aYPW47rHdBPLfrtS-1&code-node-id=0-9&utm_source=chatgpt.com)
+
