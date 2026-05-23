@@ -9,5 +9,5 @@ Całość działa lokalnie na urządzeniu i wykorzystuje architekturę MVVM, co 
 ## Makieta aplikacji
 Link do makiety aplikacji:
 
-[Expense Tracker Mobile App – Figma](https://www.figma.com/make/2hZU3h7LnoRbklkYWf9zop/Expense-Tracking-Mobile-App?fullscreen=1&t=aYPW47rHdBPLfrtS-1&code-node-id=0-9&utm_source=chatgpt.com)
+[Expense Tracker Mobile App](https://www.figma.com/make/2hZU3h7LnoRbklkYWf9zop/Expense-Tracking-Mobile-App?fullscreen=1&t=aYPW47rHdBPLfrtS-1&code-node-id=0-9&utm_source=chatgpt.com)
 
